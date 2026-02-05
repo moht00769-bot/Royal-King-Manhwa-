@@ -1,0 +1,243 @@
+<!DOCTYPE html
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <!-- كسر تتبع المصدر لضمان عمل الصور -->
+    <meta name="referrer" content="no-referrer">
+    <title>The world of manhwa and anime</title>
+    
+    <!-- الخطوط والأيقونات -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --p: #00dc64; /* لون الويب تون */
+            --bg: #000000;
+            --surface: #0d0d0d;
+            --card: #151515;
+            --text: #ffffff;
+            --border: rgba(255,255,255,0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); font-family: 'Cairo', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+        /* HEADER */
+        .header { height: 65px; background: #0a0a0a; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 100; flex-shrink: 0; }
+        .logo { font-weight: 900; font-size: 1.3rem; letter-spacing: -1px; }
+        .logo span { color: var(--p); }
+
+        /* NAVIGATION & SEARCH */
+        .nav-zone { background: #000; border-bottom: 1px solid var(--border); padding: 10px; flex-shrink: 0; }
+        .search-container { position: relative; margin-bottom: 10px; }
+        .search-input { width: 100%; background: #111; border: 1px solid #222; padding: 12px 15px; border-radius: 12px; color: white; text-align: center; font-size: 0.85rem; }
+        
+        .tabs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab { padding: 8px 22px; background: #111; border-radius: 30px; font-size: 0.75rem; font-weight: 900; color: #555; cursor: pointer; white-space: nowrap; transition: 0.3s; border: 1px solid #222; }
+        .tab.active { background: var(--p); color: #000; border-color: var(--p); }
+
+        /* VIEWPORT (GRID) */
+        #viewport { flex: 1; overflow-y: auto; padding: 10px; padding-bottom: 100px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        @media(min-width: 700px) { .grid { grid-template-columns: repeat(6, 1fr); } }
+
+        /* CARD DESIGN */
+        .card { background: var(--card); border-radius: 12px; overflow: hidden; position: relative; aspect-ratio: 2/3; cursor: pointer; transition: 0.3s; border: 1px solid #1a1a1a; }
+        .card:active { transform: scale(0.95); }
+        .card img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: 0.5s; background: #111; }
+        .card-ov { position: absolute; bottom: 0; width: 100%; padding: 8px; background: linear-gradient(to top, #000 80%, transparent); font-size: 0.6rem; font-weight: bold; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-type { position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.8); color: var(--p); font-size: 0.5rem; padding: 2px 5px; border-radius: 4px; font-weight: 900; }
+
+        /* DETAILS MODAL */
+        .panel { position: fixed; inset: 0; background: #000; z-index: 1000; display: none; flex-direction: column; overflow-y: auto; }
+        .modal-body { padding: 25px; text-align: center; }
+        .m-img { width: 150px; border-radius: 15px; border: 2px solid var(--p); margin: 0 auto 20px; box-shadow: 0 0 30px rgba(0,220,100,0.2); }
+        .m-title { font-size: 1.4rem; font-weight: 900; margin-bottom: 10px; }
+        
+        .action-btn { width: 100%; padding: 16px; border-radius: 15px; font-weight: 900; border: none; cursor: pointer; margin-bottom: 12px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1rem; color: #000; background: var(--p); }
+
+        /* BOTTOM NAV */
+        .bottom-nav { height: 75px; background: #0a0a0a; border-top: 1px solid #222; position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; align-items: center; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { color: #444; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+        .nav-item.active { color: var(--p); }
+        .nav-item i { font-size: 1.3rem; }
+        .nav-item span { font-size: 0.6rem; font-weight: 900; }
+
+        #loader { text-align: center; padding: 50px; color: var(--p); display: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. HEADER -->
+    <header class="header">
+        <div class="logo">WORLD <span>AETERNA</span></div>
+        <div style="font-size: 0.7rem; color: #555;">Status: <span id="status-text">Synchronizing...</span></div>
+    </header>
+
+    <!-- 2. NAVIGATION & SEARCH -->
+    <div class="nav-zone">
+        <div class="search-container">
+            <input type="text" id="search-inp" class="search-input" placeholder="ابحث عن مانهوا أو أنمي (English)..." onchange="System.search(this.value)">
+        </div>
+        <div class="tabs">
+            <div class="tab active" onclick="System.filter('MANHWA', this)">MANHWA</div>
+            <div class="tab" onclick="System.filter('ANIME', this)">ANIME</div>
+            <div class="tab" onclick="System.filter('MANGA', this)">MANGA</div>
+            <div class="tab" onclick="System.filter('HENTAI', this)" style="color:#ff0055">HENTAI +18</div>
+        </div>
+    </div>
+
+    <!-- 3. VIEWPORT -->
+    <div id="viewport">
+        <div id="loader">جاري جلب البيانات...</div>
+        <div id="grid" class="grid"></div>
+    </div>
+
+    <!-- 4. MODAL -->
+    <div id="modal" class="panel">
+        <div class="modal-body">
+            <button onclick="System.closeModal()" style="float:left; color:white; background:none; border:none; font-size:2rem;">✕</button>
+            <br clear="all">
+            <img id="m-img" class="m-img" src="">
+            <h2 id="m-title" class="m-title">Title</h2>
+            <p id="m-desc" style="color:#888; font-size:0.85rem; line-height:1.5; text-align:right; margin-bottom:30px;">جاري تحميل سجل البيانات...</p>
+            
+            <a id="m-link" href="#" target="_blank" class="action-btn">▶ ابدأ الآن</a>
+            <button onclick="System.closeModal()" style="background:none; border:none; color:#555; text-decoration:underline;">إغلاق</button>
+        </div>
+    </div>
+
+    <!-- 5. BOTTOM NAV -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="System.switchView('home', this)"><i class="fas fa-meteor"></i><span>Portal</span></div>
+        <div class="nav-item" onclick="System.switchView('fav', this)"><i class="fas fa-heart"></i><span>Library</span></div>
+        <div class="nav-item" onclick="alert('Fame: 100%')"><i class="fas fa-fire"></i><span>System</span></div>
+    </div>
+
+    <script>
+        // === THE IMMORTAL ENGINE (PURE NATIVE JS) ===
+        const System = {
+            state: { type: 'MANGA', country: 'KR', adult: false, favs: JSON.parse(localStorage.getItem('zen_favs')) || [] },
+
+            // 🔥 المحرك الأزلي للأغلفة (The Triple-Tunnel)
+            // نستخدم 3 طبقات من البروكسيات العالمية لضمان ظهور الصورة رغماً عن أي حظر
+            getImg: (url, level = 0) => {
+                if(!url) return "";
+                const proxies = [
+                    // الطبقة 1: نفق جوجل
+                    u => `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=2592000&url=${encodeURIComponent(u)}`,
+                    // الطبقة 2: نفق ووردبريس
+                    u => `https://i0.wp.com/${u.replace('https://','')}`,
+                    // الطبقة 3: نفق Weserv
+                    u => `https://images.weserv.nl/?url=${encodeURIComponent(u)}&output=webp`
+                ];
+                return proxies[level](url);
+            },
+
+            // 1. جلب البيانات من AniList
+            fetch: async (searchQ = '') => {
+                const grid = document.getElementById('grid');
+                const loader = document.getElementById('loader');
+                grid.innerHTML = '';
+                loader.style.display = 'block';
+                document.getElementById('status-text').innerText = "Connecting...";
+
+                const query = `
+                query ($type: MediaType, $search: String, $isAdult: Boolean, $country: CountryCode) {
+                    Page(page: 1, perPage: 24) {
+                        media(sort: TRENDING_DESC, type: $type, search: $search, isAdult: $isAdult, countryOfOrigin: $country) {
+                            id title { english romaji native } coverImage { extraLarge large } description averageScore type format status
+                        }
+                    }
+                }`;
+
+                const variables = {
+                    type: (System.state.type === 'ANIME') ? 'ANIME' : 'MANGA',
+                    search: searchQ || undefined,
+                    isAdult: System.state.adult,
+                    country: System.state.country
+                };
+
+                try {
+                    const response = await fetch('https://graphql.anilist.co', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query, variables })
+                    });
+                    const json = await response.json();
+                    System.render(json.data.Page.media);
+                    document.getElementById('status-text').innerText = "Online";
+                } catch (e) {
+                    document.getElementById('status-text').innerText = "Offline";
+                    grid.innerHTML = '<div style="text-align:center; padding:20px; color:red;">خطأ في الاتصال. جرب مرة أخرى.</div>';
+                }
+                loader.style.display = 'none';
+            },
+
+            render: (list) => {
+                const grid = document.getElementById('grid');
+                grid.innerHTML = '';
+                list.forEach(m => {
+                    const title = m.title.english || m.title.romaji || m.title.native;
+                    const rawImg = m.coverImage.extraLarge || m.coverImage.large;
+                    
+                    // استخدام النفق الأول
+                    const imgUrl = System.getImg(rawImg, 0);
+
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <img src="${imgUrl}" 
+                             onload="this.style.opacity=1" 
+                             onerror="this.src='${System.getImg(rawImg, 1)}'; this.onerror=function(){this.src='${System.getImg(rawImg, 2)}'}">
+                        <div class="card-type">${m.format}</div>
+                        <div class="card-ov">${title}</div>
+                    `;
+                    card.onclick = () => System.openModal(m, title, rawImg);
+                    grid.appendChild(card);
+                });
+            },
+
+            // 2. التحكم والملاحة
+            filter: (f, el) => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                el.classList.add('active');
+                System.state.adult = (f === 'HENTAI');
+                System.state.type = (f === 'ANIME') ? 'ANIME' : 'MANGA';
+                System.state.country = (f === 'MANHWA') ? 'KR' : (f === 'MANGA' ? 'JP' : undefined);
+                System.fetch();
+            },
+
+            search: (v) => System.fetch(v),
+            
+            openModal: (m, title, rawImg) => {
+                const modalImg = System.getImg(rawImg, 0);
+                document.getElementById('m-img').src = modalImg;
+                document.getElementById('m-title').innerText = title;
+                document.getElementById('m-desc').innerHTML = m.description || 'لا يوجد وصف متاح.';
+                
+                const link = (m.type === 'ANIME') 
+                    ? `https://hianime.to/search?keyword=${encodeURIComponent(title)}` 
+                    : `https://comick.io/search?q=${encodeURIComponent(title)}`;
+                
+                document.getElementById('m-link').href = link;
+                document.getElementById('modal').style.display = 'flex';
+            },
+
+            closeModal: () => document.getElementById('modal').style.display = 'none',
+
+            switchView: (v, el) => {
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                el.classList.add('active');
+                if(v === 'fav') System.render(System.state.favs);
+                else System.fetch();
+            }
+        };
+
+        window.onload = () => System.fetch();
+    </script>
+</body>
+</html>
